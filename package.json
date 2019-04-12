@@ -1,0 +1,26 @@
+{
+  "name": "desayuneitor3mil",
+  "version": "1.0.0",
+  "description": "Lista de compras comunitaria",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Benj4/ListaDeCompraComunitaria.git"
+  },
+  "keywords": [
+    "firebase",
+    "react",
+    "serverless",
+    "lista",
+    "compras"
+  ],
+  "author": "Benjamin Diaz",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Benj4/ListaDeCompraComunitaria/issues"
+  },
+  "homepage": "https://github.com/Benj4/ListaDeCompraComunitaria#readme"
+}
