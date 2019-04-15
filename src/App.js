@@ -1,16 +1,20 @@
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
+import 'typeface-roboto';
 
 import firebase from './firebase';
+
+import GoogleLogin from './googleLogin';
 
 const db = firebase.firestore();
 
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = { messages: [] }; // <- set up react state
+    this.state = { messages: [], user : false };
   }
+
   componentWillMount(){
     
     var msg = []
@@ -22,6 +26,43 @@ class App extends Component {
 
       this.setState( { messages : msg} );
 
+    });
+
+
+    firebase.auth().getRedirectResult().then( (result) => {
+      if (result.credential) {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        var token = result.credential.accessToken;
+        // ...
+      }
+      // The signed-in user info.
+      var user = result.user;
+      if( user ){
+        console.log('Redirect: user', user.providerData[0]);
+        this.setState( {user: user.providerData[0]} );
+      }else{
+        console.log('Redirect: not logged');
+      }
+      
+    }).catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      // The email of the user's account used.
+      var email = error.email;
+      // The firebase.auth.AuthCredential type that was used.
+      var credential = error.credential;
+      // ...
+    });
+
+
+    firebase.auth().onAuthStateChanged( (user) => {
+      if (user) {
+        console.log('User is signed in.', user.providerData[0]);
+        this.setState( {user: user.providerData[0]} );
+      } else {
+        this.setState( {user: null} );
+      }
     });
 
   }
@@ -45,6 +86,7 @@ class App extends Component {
   render() {
     return (
       <div>
+        <GoogleLogin user={this.state.user} />
         <form onSubmit={this.addMessage.bind(this)}>
           <input type="text" ref={ el => this.inputEl = el }/>
           <input type="submit"/>
