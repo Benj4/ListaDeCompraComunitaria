@@ -9,8 +9,6 @@ firebase.auth().useDeviceLanguage();
 
 class GoogleLogin extends Component {
 
-
-
   clickLogin = () => {
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function() {
       var provider = new firebase.auth.GoogleAuthProvider();
@@ -36,12 +34,8 @@ class GoogleLogin extends Component {
   render(){
     return (
       <div>
-        {
-          this.props.user ? 
-          <button onClick={this.clickLogout} > LogOut </button>
-          :
-          <button onClick={this.clickLogin} disabled={ this.props.user === false } > LogIn </button>
-        }
+        { this.props.user ? <button onClick={this.clickLogout} > LogOut </button> : null}
+        { this.props.user === null ? <button onClick={this.clickLogin} > LogIn </button> : null }
       </div>
       )
   }

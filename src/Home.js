@@ -14,9 +14,14 @@ import Badge from '@material-ui/core/Badge';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
+import Fab from '@material-ui/core/Fab';
+import AddIcon from '@material-ui/icons/Add';
 import { mainListItems } from './LeftMenu';
 // import SimpleLineChart from './SimpleLineChart';
 // import SimpleTable from './SimpleTable';
+import Avatar from './Avatar';
+import firebase from './firebase';
+
 
 const drawerWidth = 240;
 
@@ -95,12 +100,58 @@ const styles = theme => ({
   h5: {
     marginBottom: theme.spacing.unit * 2,
   },
+  fab: {
+    position: 'absolute',
+    bottom: theme.spacing.unit * 4,
+    right: theme.spacing.unit * 16,
+  }
 });
 
 class Dashboard extends React.Component {
   state = {
     open: true,
+    user: false,
   };
+
+  componentWillMount(){
+
+    firebase.auth().getRedirectResult().then( (result) => {
+      if (result.credential) {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        var token = result.credential.accessToken;
+        // ...
+      }
+      // The signed-in user info.
+      var user = result.user;
+      if( user ){
+        console.log('Redirect: user', user.providerData[0]);
+        this.setState( {user: user.providerData[0]} );
+      }else{
+        console.log('Redirect: not logged');
+      }
+      
+    }).catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      // The email of the user's account used.
+      var email = error.email;
+      // The firebase.auth.AuthCredential type that was used.
+      var credential = error.credential;
+      // ...
+    });
+
+
+    firebase.auth().onAuthStateChanged( (user) => {
+      if (user) {
+        console.log('User is signed in.', user.providerData[0]);
+        this.setState( {user: user.providerData[0]} );
+      } else {
+        this.setState( {user: null} );
+      }
+    });
+
+  }
 
   handleDrawerOpen = () => {
     this.setState({ open: true });
@@ -139,13 +190,12 @@ class Dashboard extends React.Component {
               noWrap
               className={classes.title}
             >
-              Desayuneitor3Mil!!!!11
+              Lista Desayuno
+              {/* Desayuneitor3Mil!!!!11 */}
             </Typography>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+
+            <Avatar user={this.state.user} />
+           
           </Toolbar>
         </AppBar>
         <Drawer
@@ -162,10 +212,12 @@ class Dashboard extends React.Component {
           </div>
           <Divider />
           <List>{mainListItems}</List>
-          
+
         </Drawer>
         <main className={classes.content}>
-            MAIN
+          <Fab className={classes.fab} color={'primary'}>
+            <AddIcon />
+          </Fab>
         </main>
       </div>
     );
