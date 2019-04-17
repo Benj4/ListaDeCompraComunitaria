@@ -10,18 +10,23 @@ import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
-import Badge from '@material-ui/core/Badge';
+// import Badge from '@material-ui/core/Badge';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import NotificationsIcon from '@material-ui/icons/Notifications';
+// import NotificationsIcon from '@material-ui/icons/Notifications';
 import Fab from '@material-ui/core/Fab';
-import AddIcon from '@material-ui/icons/Add';
+
 import { mainListItems } from './LeftMenu';
 // import SimpleLineChart from './SimpleLineChart';
 // import SimpleTable from './SimpleTable';
 import Avatar from './Avatar';
 import firebase from './firebase';
+import GoogleLogin from './googleLogin';
+import ListaCompra from './List/ListaCompra';
 
+import AddDialog from './AddDialog/AddDialog';
+
+const db = firebase.firestore();
 
 const drawerWidth = 240;
 
@@ -111,6 +116,8 @@ class Dashboard extends React.Component {
   state = {
     open: true,
     user: false,
+    listaDelDia : { lista:[] },
+    itemList : []
   };
 
   componentWillMount(){
@@ -151,8 +158,83 @@ class Dashboard extends React.Component {
       }
     });
 
+
+    this.listenList();
+    this.listenItems();
+
   }
 
+  listenItems = () => {
+    var that = this;
+    var items = [];
+    db.collection("items").get().then(function(querySnapshot) {
+      querySnapshot.forEach(function(doc) {
+          items.push( { label: doc.id } );
+          // doc.data() is never undefined for query doc snapshots
+          //console.log(doc.id, " => ", doc.data());
+      });
+      that.setState({ itemList : items });
+  });
+  }
+
+  listenList = () => {
+    var now = new Date();
+    var dd = String(now.getDate()).padStart(2, '0');
+    var mm = String(now.getMonth() + 1).padStart(2, '0'); 
+    var yyyy = now.getFullYear();
+
+    var dayId = mm + '-' + dd + '-' + yyyy
+
+    db.collection("listas").doc(dayId)
+    .onSnapshot( (doc) => {
+        if( !doc.exists ){
+          
+          db.collection("listas").doc(dayId).set({
+            createdAt : new Date(),
+            updatedAt : new Date(),
+            lista : []
+          })
+          // .then(function() {
+          //     console.log("Document successfully written!");
+          // })
+          // .catch(function(error) {
+          //     console.error("Error writing document: ", error);
+          // });
+
+        }else{
+
+          this.setState( { listaDelDia : doc.data() } )
+
+        }
+        
+    });
+
+  }
+
+  reciveItem = (item) => {
+
+    if( this.state.user && this.state.user.uid ){
+      var listaDelDia = this.state.listaDelDia;
+      var listaUsuario = listaDelDia.lista.find( l => l.uid == this.state.user.uid );
+
+      if(listaUsuario){
+        listaUsuario.items.push( item );
+      }else{
+        listaDelDia.lista.push( { uid : this.state.user.uid, items : [item] } );
+      }
+
+      this.setState( { listaDelDia : listaDelDia } );
+
+    }
+
+    //TODO: no agregar cuando ya existe
+    db.collection("items").doc(item).set({
+      name : item
+    })
+
+  }
+
+  
   handleDrawerOpen = () => {
     this.setState({ open: true });
   };
@@ -194,8 +276,12 @@ class Dashboard extends React.Component {
               {/* Desayuneitor3Mil!!!!11 */}
             </Typography>
 
-            <Avatar user={this.state.user} />
+            <Avatar user={this.state.user}  />
            
+            <IconButton>
+              <GoogleLogin user={this.state.user} />
+            </IconButton>
+
           </Toolbar>
         </AppBar>
         <Drawer
@@ -215,8 +301,13 @@ class Dashboard extends React.Component {
 
         </Drawer>
         <main className={classes.content}>
+
+          <ListaCompra usersList={this.state.listaDelDia.lista} />
+
           <Fab className={classes.fab} color={'primary'}>
-            <AddIcon />
+
+            <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} />
+            
           </Fab>
         </main>
       </div>

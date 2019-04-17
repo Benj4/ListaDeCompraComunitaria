@@ -2,6 +2,11 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
 
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+
+import Button from '@material-ui/core/Button';
+
+
 //import firebase from './firebase';
 firebase.auth().useDeviceLanguage();
 
@@ -32,10 +37,12 @@ class GoogleLogin extends Component {
   }
 
   render(){
+
     return (
       <div>
-        { this.props.user ? <button onClick={this.clickLogout} > LogOut </button> : null}
-        { this.props.user === null ? <button onClick={this.clickLogin} > LogIn </button> : null }
+        { this.props.user ? <ExitToAppIcon  onClick={this.clickLogout} /> : null}
+        {/* { this.props.user === null ? <AccountCircleIcon onClick={this.clickLogin} /> : null } */}
+        { this.props.user === null ? <Button variant="contained" color="secondary" onClick={this.clickLogin} > LogIn </Button> : null }
       </div>
       )
   }
