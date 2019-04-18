@@ -20,7 +20,7 @@ const styles = theme => ({
   },
 });
 
-class CheckboxListSecondary extends React.Component {
+class ListaCompra extends React.Component {
   state = {
     checked: [1],
   };
@@ -58,26 +58,33 @@ class CheckboxListSecondary extends React.Component {
   render() {
     const { classes, usersList } = this.props;
 
+    var users = [];
+    for (const key in usersList) {
+      if (usersList.hasOwnProperty(key)) {
+        users.push( usersList[key] )
+      }
+    }
+
     return (
       <List className={classes.root}>
-        {usersList.map(user => (
-          <ListItem key={user.uid} button>
+        { Object.keys(usersList).filter(u => usersList[u].items.length ).map(uid => (
+          <ListItem key={uid} button>
             <ListItemAvatar>
               <Avatar
-                alt={`Avatar n°${user.uid + 1}`}
-                src={`/static/images/avatar/${user.uid + 1}.jpg`}
+                alt={usersList[uid].userData.displayName}
+                src={usersList[uid].userData.photoURL}
               />
             </ListItemAvatar>
             <ListItem >
 
-              <ListaPersona items={user.items}/>
+              <ListaPersona items={usersList[uid].items} deleteItem={this.props.deleteItem} showDelete={ this.props.loggedUserId == uid} />
 
             </ListItem>
             <ListItemSecondaryAction>
-              <Checkbox
-                onChange={this.handleToggle(user)}
-                checked={this.state.checked.indexOf(user) !== -1}
-              />
+              {/* <Checkbox
+                onChange={this.handleToggle(uid)}
+                checked={this.state.checked.indexOf(uid) !== -1}
+              /> */}
             </ListItemSecondaryAction>
           </ListItem>
         ))}
@@ -86,8 +93,8 @@ class CheckboxListSecondary extends React.Component {
   }
 }
 
-CheckboxListSecondary.propTypes = {
+ListaCompra.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(CheckboxListSecondary);
+export default withStyles(styles)(ListaCompra);

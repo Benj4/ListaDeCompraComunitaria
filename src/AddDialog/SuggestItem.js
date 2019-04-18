@@ -104,7 +104,7 @@ const styles = theme => ({
   },
 });
 
-class IntegrationAutosuggest extends React.Component {
+class SuggestItem extends React.Component {
   state = {
     single: '',
     popper: '',
@@ -173,8 +173,8 @@ class IntegrationAutosuggest extends React.Component {
   }
 }
 
-IntegrationAutosuggest.propTypes = {
+SuggestItem.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(IntegrationAutosuggest);
+export default withStyles(styles)(SuggestItem);

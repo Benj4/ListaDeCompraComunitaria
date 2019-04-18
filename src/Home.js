@@ -113,10 +113,11 @@ const styles = theme => ({
 });
 
 class Dashboard extends React.Component {
+  
   state = {
     open: true,
     user: false,
-    listaDelDia : { lista:[] },
+    listaDelDia : { lista: {} },
     itemList : []
   };
 
@@ -138,6 +139,7 @@ class Dashboard extends React.Component {
       }
       
     }).catch(function(error) {
+      console.log('getRedirectResult error', error);
       // Handle Errors here.
       var errorCode = error.code;
       var errorMessage = error.message;
@@ -158,9 +160,17 @@ class Dashboard extends React.Component {
       }
     });
 
+    var now = new Date();
+    var dd = String(now.getDate()).padStart(2, '0');
+    var mm = String(now.getMonth() + 1).padStart(2, '0'); 
+    var yyyy = now.getFullYear();
 
-    this.listenList();
-    this.listenItems();
+    var dayId = mm + '-' + dd + '-' + yyyy
+    this.setState({ dayId : dayId }, ()=>{
+      this.listenList();
+      this.listenItems();
+    })
+
 
   }
 
@@ -178,21 +188,16 @@ class Dashboard extends React.Component {
   }
 
   listenList = () => {
-    var now = new Date();
-    var dd = String(now.getDate()).padStart(2, '0');
-    var mm = String(now.getMonth() + 1).padStart(2, '0'); 
-    var yyyy = now.getFullYear();
+    
 
-    var dayId = mm + '-' + dd + '-' + yyyy
-
-    db.collection("listas").doc(dayId)
+    db.collection("listas").doc(this.state.dayId)
     .onSnapshot( (doc) => {
         if( !doc.exists ){
           
-          db.collection("listas").doc(dayId).set({
+          db.collection("listas").doc(this.state.dayId).set({
             createdAt : new Date(),
             updatedAt : new Date(),
-            lista : []
+            lista : {}
           })
           // .then(function() {
           //     console.log("Document successfully written!");
@@ -214,26 +219,48 @@ class Dashboard extends React.Component {
   reciveItem = (item) => {
 
     if( this.state.user && this.state.user.uid ){
-      var listaDelDia = this.state.listaDelDia;
-      var listaUsuario = listaDelDia.lista.find( l => l.uid == this.state.user.uid );
+      const listaDelDia = this.state.listaDelDia;
+      var listaUsuario = listaDelDia.lista[this.state.user.uid];
 
+      //TODO: incrementar cantidad cuando el item ya exista
       if(listaUsuario){
         listaUsuario.items.push( item );
       }else{
-        listaDelDia.lista.push( { uid : this.state.user.uid, items : [item] } );
+        //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
+        listaDelDia.lista[this.state.user.uid] = { userData : this.state.user, items: [item]};
       }
 
-      this.setState( { listaDelDia : listaDelDia } );
+
+      db.collection("listas").doc(this.state.dayId).update({
+        updatedAt : new Date(),
+        lista : listaDelDia.lista
+      })
+
+      //this.setState( { listaDelDia : listaDelDia } );
 
     }
 
     //TODO: no agregar cuando ya existe
-    db.collection("items").doc(item).set({
-      name : item
+    db.collection("items").doc(item.item).set({
+      name : item.item
     })
 
   }
 
+  deleteItem = (item) => {
+    var uid = this.state.user.uid;
+    const listaDelDia = this.state.listaDelDia;
+    const newItemList = [...listaDelDia.lista[uid].items];
+    const itemToDelete = newItemList.indexOf(item);
+    
+    newItemList.splice(itemToDelete, 1);
+
+    db.collection("listas").doc(this.state.dayId).update({
+      updatedAt : new Date(),
+      ["lista."+uid+".items"] : newItemList
+    })
+
+  };
   
   handleDrawerOpen = () => {
     this.setState({ open: true });
@@ -302,7 +329,7 @@ class Dashboard extends React.Component {
         </Drawer>
         <main className={classes.content}>
 
-          <ListaCompra usersList={this.state.listaDelDia.lista} />
+          <ListaCompra usersList={this.state.listaDelDia.lista} deleteItem={this.deleteItem} loggedUserId={this.state.user ? this.state.user.uid : null} />
 
           <Fab className={classes.fab} color={'primary'}>
 
