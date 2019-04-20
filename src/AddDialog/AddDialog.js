@@ -9,6 +9,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import withMobileDialog from '@material-ui/core/withMobileDialog';
 import AddIcon from '@material-ui/icons/Add';
 import TextField from '@material-ui/core/TextField';
+import Fab from '@material-ui/core/Fab';
 
 import SuggestItem from './SuggestItem';
 
@@ -29,10 +30,13 @@ class ResponsiveDialog extends React.Component {
   };
 
   handleClickOpen = () => {
-    this.setState({ open: true, itemValue : "" });
+    if( !this.state.open ){
+      this.setState({ open: true, itemValue : "" });
+    }
   };
 
   handleClose = () => {
+    
     this.setState({ open: false, itemValue : "" });
   };
 
@@ -45,10 +49,16 @@ class ResponsiveDialog extends React.Component {
 
   render() {
     const { fullScreen } = this.props;
+    const fabStyle = {
+      position: 'absolute',
+      bottom: 10,
+      right: 10,
+    }
 
     return (
-      <div>
-        <AddIcon onClick={this.handleClickOpen} />
+      <Fab style={fabStyle} color={'primary'} onClick={this.handleClickOpen} >
+
+        <AddIcon />
 
         <Dialog
           fullScreen={fullScreen}
@@ -83,7 +93,7 @@ class ResponsiveDialog extends React.Component {
             </Button>
           </DialogActions>
         </Dialog>
-      </div>
+      </Fab>
     );
   }
 }

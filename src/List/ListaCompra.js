@@ -14,7 +14,7 @@ import ListaPersona from './ListaPersona';
 const styles = theme => ({
   root: {
     width: '100%',
-    marginTop: 100,
+    // marginTop: 100,
     // maxWidth: 360,
     backgroundColor: theme.palette.background.paper,
   },
@@ -77,7 +77,7 @@ class ListaCompra extends React.Component {
             </ListItemAvatar>
             <ListItem >
 
-              <ListaPersona items={usersList[uid].items} deleteItem={this.props.deleteItem} showDelete={ this.props.loggedUserId == uid} />
+              <ListaPersona items={usersList[uid].items} deleteItem={this.props.deleteItem} showDelete={ this.props.loggedUserId == uid}  />
 
             </ListItem>
             <ListItemSecondaryAction>

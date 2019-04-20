@@ -14,7 +14,6 @@ import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 // import NotificationsIcon from '@material-ui/icons/Notifications';
-import Fab from '@material-ui/core/Fab';
 
 import { mainListItems } from './LeftMenu';
 // import SimpleLineChart from './SimpleLineChart';
@@ -23,6 +22,7 @@ import Avatar from './Avatar';
 import firebase from './firebase';
 import GoogleLogin from './googleLogin';
 import ListaCompra from './List/ListaCompra';
+import CompradorHeader from './List/CompradorHeader'
 
 import AddDialog from './AddDialog/AddDialog';
 
@@ -95,6 +95,7 @@ const styles = theme => ({
     padding: theme.spacing.unit * 3,
     height: '100vh',
     overflow: 'auto',
+    paddingTop: 100
   },
   chartContainer: {
     marginLeft: -22,
@@ -123,13 +124,8 @@ class Dashboard extends React.Component {
 
   componentWillMount(){
 
+    //cuando el usuario hace login
     firebase.auth().getRedirectResult().then( (result) => {
-      if (result.credential) {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        var token = result.credential.accessToken;
-        // ...
-      }
-      // The signed-in user info.
       var user = result.user;
       if( user ){
         console.log('Redirect: user', user.providerData[0]);
@@ -140,17 +136,10 @@ class Dashboard extends React.Component {
       
     }).catch(function(error) {
       console.log('getRedirectResult error', error);
-      // Handle Errors here.
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      // The email of the user's account used.
-      var email = error.email;
-      // The firebase.auth.AuthCredential type that was used.
-      var credential = error.credential;
-      // ...
+
     });
 
-
+    //cuando la pagina se carga y toma el login de las cookies
     firebase.auth().onAuthStateChanged( (user) => {
       if (user) {
         console.log('User is signed in.', user.providerData[0]);
@@ -261,7 +250,22 @@ class Dashboard extends React.Component {
     })
 
   };
-  
+
+  handleChangeComprador = (value)  => {
+
+    var user = null;
+    if (value) {
+      user = this.state.user;
+    }
+
+    db.collection("listas").doc(this.state.dayId).update({
+      updatedAt : new Date(),
+      //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
+      comprador : user
+    })
+
+  }
+
   handleDrawerOpen = () => {
     this.setState({ open: true });
   };
@@ -329,13 +333,12 @@ class Dashboard extends React.Component {
         </Drawer>
         <main className={classes.content}>
 
+          <CompradorHeader listaDelDia={this.state.listaDelDia} handleChangeComprador={ this.handleChangeComprador } loggedUserId={this.state.user ? this.state.user.uid : null} />
+
           <ListaCompra usersList={this.state.listaDelDia.lista} deleteItem={this.deleteItem} loggedUserId={this.state.user ? this.state.user.uid : null} />
 
-          <Fab className={classes.fab} color={'primary'}>
-
-            <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} />
-            
-          </Fab>
+          <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} />
+          
         </main>
       </div>
     );
