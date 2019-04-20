@@ -26,11 +26,16 @@ class ListaPersona extends React.Component {
   render() {
     const { classes, listaDelDia } = this.props;
 
-    console.log( 'listaDelDia.comprador', listaDelDia.comprador );
+    console.log( 'listaDelDia', typeof  listaDelDia );
 
     var label = "Hoy compro yo";
+    var checked = !!this.state.comproYo;
     if( listaDelDia.comprador != null && this.props.loggedUserId != listaDelDia.comprador.uid ){
       label = "Hoy compra " + listaDelDia.comprador.displayName ;
+      checked = false;
+    }
+    if( listaDelDia.comprador != null && this.props.loggedUserId == listaDelDia.comprador.uid  ){
+      checked = true;
     }
 
     return (
@@ -38,13 +43,13 @@ class ListaPersona extends React.Component {
           <FormControlLabel
             control={
               <Switch
-                checked={this.state.comproYo}
+                checked={checked}
                 onChange={this.handleChange('comproYo')}
                 value="comproYo"
               />
             }
             label={label}
-            disabled={listaDelDia.comprador && this.props.loggedUserId != listaDelDia.comprador.uid}
+            disabled={ !this.props.loggedUserId || (listaDelDia.comprador && this.props.loggedUserId != listaDelDia.comprador.uid)}
           />
 
       </Paper>
