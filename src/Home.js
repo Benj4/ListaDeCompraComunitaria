@@ -22,7 +22,8 @@ import Avatar from './Avatar';
 import firebase from './firebase';
 import GoogleLogin from './googleLogin';
 import ListaCompra from './List/ListaCompra';
-import CompradorHeader from './List/CompradorHeader'
+import CompradorHeader from './List/CompradorHeader';
+import ListaTotal from './List/ListaTotal';
 
 import AddDialog from './AddDialog/AddDialog';
 
@@ -155,6 +156,7 @@ class Dashboard extends React.Component {
     var yyyy = now.getFullYear();
 
     var dayId = mm + '-' + dd + '-' + yyyy
+    //var dayId = dd + '-' + mm + '-' + yyyy
     this.setState({ dayId : dayId }, ()=>{
       this.listenList();
       this.listenItems();
@@ -206,7 +208,9 @@ class Dashboard extends React.Component {
   }
 
   reciveItem = (item) => {
-
+    if( !!this.state.listaDelDia.bloqueada ){
+      return;
+    }
     if( this.state.user && this.state.user.uid ){
       const listaDelDia = this.state.listaDelDia;
       var listaUsuario = listaDelDia.lista[this.state.user.uid];
@@ -216,7 +220,8 @@ class Dashboard extends React.Component {
         listaUsuario.items.push( item );
       }else{
         //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
-        listaDelDia.lista[this.state.user.uid] = { userData : this.state.user, items: [item]};
+        const { uid, displayName, photoURL } = this.state.user;
+        listaDelDia.lista[this.state.user.uid] = { userData : { uid, displayName, photoURL }, items: [item]};
       }
 
 
@@ -251,18 +256,91 @@ class Dashboard extends React.Component {
 
   };
 
-  handleChangeComprador = (value)  => {
+  handleChangeComprador = (value) => {
 
     var user = null;
     if (value) {
-      user = this.state.user;
+      const { uid, displayName, photoURL } = this.state.user
+      user = { uid, displayName, photoURL };
     }
-
+    
     db.collection("listas").doc(this.state.dayId).update({
       updatedAt : new Date(),
       //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
       comprador : user
     })
+
+  }
+
+  handleChangeBloqueoLista = (value) => {
+    
+    db.collection("listas").doc(this.state.dayId).update({
+      updatedAt : new Date(),
+      //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
+      bloqueada : !!value
+    })
+
+  }
+
+  generarCobro = () => {
+
+    const listaDelDia = this.state.listaDelDia;
+    var userList = {};
+
+    for (const key in listaDelDia.lista) {
+      if (listaDelDia.lista.hasOwnProperty(key)) {
+        let keyday = this.state.dayId.split('-').join(''); //si si, que ineficiente bla bla . . .
+        userList[key] = {};
+        userList[key][keyday] = {
+          userData : listaDelDia.lista[key].userData,
+          dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+          cancelado : 0
+        }
+      }
+    }
+
+
+    //habilitar actualizar
+    db.collection("deudas").doc(this.state.user.uid).set({
+      createdAt : new Date(),
+      dayId : this.state.dayId,
+      deudas : userList
+    })
+    .then(function() {
+      alert('ok');
+    })
+    .catch(function(error) {
+        console.error("Error writing document: ", error);
+    });
+
+  }
+
+  setItemValor = (item) => {
+
+    const listaDelDia = this.state.listaDelDia;
+
+    for (const key in listaDelDia.lista) {
+      if (listaDelDia.lista.hasOwnProperty(key)) {
+        let userlist = listaDelDia.lista[key];
+        
+        for (let i = 0; i < userlist.items.length; i++) {
+          if (userlist.items[i].item == item.item) {
+            userlist.items[i].valor = item.valor * userlist.items[i].cantidad;
+            //break; //descomentar cuando se unifiquen numero de items
+          }
+          
+        }
+
+      }
+    }
+
+    //TODO: optimsar?
+    db.collection("listas").doc(this.state.dayId).update({
+      updatedAt : new Date(),
+      ["lista"] : listaDelDia.lista
+    })
+
+    //this.setState( {listaDelDia: listaDelDia} )
 
   }
 
@@ -335,9 +413,11 @@ class Dashboard extends React.Component {
 
           <CompradorHeader listaDelDia={this.state.listaDelDia} handleChangeComprador={ this.handleChangeComprador } loggedUserId={this.state.user ? this.state.user.uid : null} />
 
-          <ListaCompra usersList={this.state.listaDelDia.lista} deleteItem={this.deleteItem} loggedUserId={this.state.user ? this.state.user.uid : null} />
+          <ListaCompra listaDelDia={this.state.listaDelDia} deleteItem={this.deleteItem} handleChangeBloqueoLista={this.handleChangeBloqueoLista} generarCobro={this.generarCobro} loggedUserId={this.state.user ? this.state.user.uid : null} />
 
-          <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} />
+          <ListaTotal listaDelDia={this.state.listaDelDia} setItemValor={this.setItemValor} loggedUserId={this.state.user ? this.state.user.uid : null} />
+
+          <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} disabled={ !!this.state.listaDelDia.bloqueada } />
           
         </main>
       </div>

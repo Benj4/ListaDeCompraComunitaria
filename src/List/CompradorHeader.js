@@ -12,7 +12,7 @@ const styles = theme => ({
   }
 });
 
-class ListaPersona extends React.Component {
+class CompradorHeader extends React.Component {
   state = {
     comproYo: false
   };
@@ -25,8 +25,6 @@ class ListaPersona extends React.Component {
 
   render() {
     const { classes, listaDelDia } = this.props;
-
-    console.log( 'listaDelDia', typeof  listaDelDia );
 
     var label = "Hoy compro yo";
     var checked = !!this.state.comproYo;
@@ -51,14 +49,13 @@ class ListaPersona extends React.Component {
             label={label}
             disabled={ !this.props.loggedUserId || (listaDelDia.comprador && this.props.loggedUserId != listaDelDia.comprador.uid)}
           />
-
       </Paper>
     );
   }
 }
 
-ListaPersona.propTypes = {
+CompradorHeader.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(ListaPersona);
+export default withStyles(styles)(CompradorHeader);

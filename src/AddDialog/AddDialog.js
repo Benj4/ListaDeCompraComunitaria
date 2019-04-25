@@ -41,8 +41,8 @@ class ResponsiveDialog extends React.Component {
   };
 
   handleAdd = () => {
-    if( this.state.itemValue.length && this.state.cantidad > 0){
-      this.props.addItem( { cantidad : this.state.cantidad, item : this.state.itemValue }  );
+    if( this.state.itemValue.length && parseInt(this.state.cantidad) > 0){
+      this.props.addItem( { cantidad : parseInt(this.state.cantidad), item : this.state.itemValue }  );
     }
     this.setState({ open: false, itemValue : "" });
   };
@@ -56,7 +56,7 @@ class ResponsiveDialog extends React.Component {
     }
 
     return (
-      <Fab style={fabStyle} color={'primary'} onClick={this.handleClickOpen} >
+      <Fab style={fabStyle} color={'primary'} onClick={this.handleClickOpen} disabled={this.props.disabled}>
 
         <AddIcon />
 
