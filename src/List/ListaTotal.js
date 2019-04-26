@@ -71,7 +71,8 @@ class ListaTotal extends React.Component {
   );
     
   handleToggle = value => () => {
-    const { checked } = this.state;
+    // const { checked } = this.state;
+    const checked = this.props.listaDelDia && this.props.listaDelDia.listChecks || [];
     const currentIndex = checked.indexOf(value);
     const newChecked = [...checked];
 
@@ -81,9 +82,12 @@ class ListaTotal extends React.Component {
       newChecked.splice(currentIndex, 1);
     }
 
-    this.setState({
-      checked: newChecked,
-    });
+    this.props.setListChecks(newChecked);
+
+    // this.setState({
+    //   checked: newChecked,
+    // });
+
   };
 
   handleChange = item => event => {
@@ -108,6 +112,10 @@ class ListaTotal extends React.Component {
 
     const listaTotal = this.getListaTotal(listaDelDia.lista);
 
+    const esComprador = this.props.loggedUserId && (listaDelDia.comprador && this.props.loggedUserId == listaDelDia.comprador.uid);
+
+    const listChecks = this.props.listaDelDia && this.props.listaDelDia.listChecks || [];
+
     return (
       <div>
         <Typography variant="h4" gutterBottom>
@@ -128,8 +136,8 @@ class ListaTotal extends React.Component {
                       key={item.item}
                       selected={isSelected}
                     >
-                      <TableCell padding="checkbox" onClick={this.handleToggle(item.item)} >
-                        <Checkbox checked={this.state.checked.indexOf(item.item) !== -1} />
+                      <TableCell padding="checkbox" onClick={ esComprador ? this.handleToggle(item.item) : ()=>{} } >
+                        <Checkbox checked={listChecks.indexOf(item.item) !== -1} />
                       </TableCell>
                       <TableCell component="th" scope="row" padding="none">
                         {item.cantidad}
@@ -150,7 +158,7 @@ class ListaTotal extends React.Component {
                             shrink: true,
                           }}
                           margin="normal"
-                          disabled={ !this.props.loggedUserId || (listaDelDia.comprador && this.props.loggedUserId != listaDelDia.comprador.uid)}
+                          disabled={ !esComprador }
                         />
                       </TableCell>
                     </TableRow>

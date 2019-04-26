@@ -54,7 +54,7 @@ class ListaPersona extends React.Component {
               icon={icon}
               label={data.item}
               avatar={<Avatar>{data.cantidad}</Avatar>}
-              onDelete={this.props.showDelete && this.handleDelete(data)}
+              onDelete={this.props.showDelete ? this.handleDelete(data) : null}
               className={classes.chip}
               variant="outlined"
             />

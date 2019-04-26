@@ -30,6 +30,11 @@ const styles = theme => ({
   },
   button: {
     margin: theme.spacing.unit,
+  },
+  legend:{
+    fontSize: 'small',
+    color: 'darkslategray',
+    margin: 10
   }
 });
 
@@ -96,9 +101,11 @@ class ListaCompra extends React.Component {
       }
     }
 
+    const esComprador = ( this.props.loggedUserId && (listaDelDia.comprador && this.props.loggedUserId == listaDelDia.comprador.uid) );
 
+    const generarCobro = esComprador && allWithValues && !!listaDelDia.bloqueada;
 
-    const generarCobro = allWithValues && !!listaDelDia.bloqueada && ( this.props.loggedUserId && (listaDelDia.comprador && this.props.loggedUserId == listaDelDia.comprador.uid) );
+    //console.log(this.props.loggedUserId ,'==', uid);
 
     return (
       <Paper className={classes.paper}>
@@ -131,23 +138,31 @@ class ListaCompra extends React.Component {
         </List>
 
         {/* <Paper className={classes.paper}> */}
-          <FormControlLabel className={classes.bottomControls}
-            control={
-              <Switch
-                checked={!!listaDelDia.bloqueada}
-                onChange={this.handleChange('listaBloqueada')}
-                value="listaBloqueada"
+          {
+            esComprador ?
+              <div>
+              <FormControlLabel className={classes.bottomControls}
+                control={
+                  <Switch
+                    checked={!!listaDelDia.bloqueada}
+                    onChange={this.handleChange('listaBloqueada')}
+                    value="listaBloqueada"
+                  />
+                }
+                label={'Bloquear lista'}
+                
               />
-            }
-            label={'Bloquear lista'}
-            disabled={ !this.props.loggedUserId || (listaDelDia.comprador && this.props.loggedUserId != listaDelDia.comprador.uid)}
-          />
-          { generarCobro ?
-            <Button variant="outlined" color="primary" className={classes.button} onClick={this.props.generarCobro}>
-              Generar cobro
-            </Button>
-            :null
+              { generarCobro ?
+                <Button variant="outlined" color="primary" className={classes.button} onClick={this.props.generarCobro}>
+                  Generar cobro
+                </Button>
+                :null
+              }
+              </div>
+            :
+            (!!listaDelDia.bloqueada ? <span className={classes.legend}> <i>* Lista Blokeada por el comprador </i></span> : null)
           }
+          
           
 
         {/* </Paper> */}

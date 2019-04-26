@@ -155,8 +155,8 @@ class Dashboard extends React.Component {
     var mm = String(now.getMonth() + 1).padStart(2, '0'); 
     var yyyy = now.getFullYear();
 
-    var dayId = mm + '-' + dd + '-' + yyyy
-    //var dayId = dd + '-' + mm + '-' + yyyy
+    //var dayId = mm + '-' + dd + '-' + yyyy
+    var dayId = dd + '-' + mm + '-' + yyyy
     this.setState({ dayId : dayId }, ()=>{
       this.listenList();
       this.listenItems();
@@ -219,7 +219,7 @@ class Dashboard extends React.Component {
       if(listaUsuario){
         listaUsuario.items.push( item );
       }else{
-        //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
+        
         const { uid, displayName, photoURL } = this.state.user;
         listaDelDia.lista[this.state.user.uid] = { userData : { uid, displayName, photoURL }, items: [item]};
       }
@@ -276,7 +276,7 @@ class Dashboard extends React.Component {
     
     db.collection("listas").doc(this.state.dayId).update({
       updatedAt : new Date(),
-      //TODO: enviar solo datos del usuario que se utilizan ( photo, nombre )
+      
       bloqueada : !!value
     })
 
@@ -287,31 +287,63 @@ class Dashboard extends React.Component {
     const listaDelDia = this.state.listaDelDia;
     var userList = {};
 
+    const collecDeudas = db.collection("deudas");
+
     for (const key in listaDelDia.lista) {
       if (listaDelDia.lista.hasOwnProperty(key)) {
-        let keyday = this.state.dayId.split('-').join(''); //si si, que ineficiente bla bla . . .
-        userList[key] = {};
-        userList[key][keyday] = {
-          userData : listaDelDia.lista[key].userData,
-          dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
-          cancelado : 0
-        }
+        // let keyday = this.state.dayId.split('-').join(''); //si si, que ineficiente bla bla . . .
+        // userList[key] = {};
+        // userList[key][keyday] = {
+        //   userData : listaDelDia.lista[key].userData,
+        //   dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+        //   cancelado : 0
+        // }
+
+        collecDeudas.where("dayId", "==", this.state.dayId).where("deudor", "==", listaDelDia.lista[key].userData)
+        .get()
+        .then( (querySnapshot) => {
+            querySnapshot.forEach(function(doc) {
+               
+                collecDeudas.doc(doc.id).update({
+                  updatedAt : new Date(),
+                  dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+                })
+
+            });
+
+            if(querySnapshot.size == 0){
+
+              const { uid, displayName, photoURL } = this.state.user;
+        
+              collecDeudas.doc().set({
+                createdAt : new Date(),
+                dayId : this.state.dayId,
+                deudor : listaDelDia.lista[key].userData,
+                cobrador : { uid, displayName, photoURL },
+                dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+                cancelado : 0
+              });
+
+            }
+        })
+        
+
       }
     }
 
 
     //habilitar actualizar
-    db.collection("deudas").doc(this.state.user.uid).set({
-      createdAt : new Date(),
-      dayId : this.state.dayId,
-      deudas : userList
-    })
-    .then(function() {
-      alert('ok');
-    })
-    .catch(function(error) {
-        console.error("Error writing document: ", error);
-    });
+    // db.collection("deudas").doc(this.state.user.uid).set({
+    //   createdAt : new Date(),
+    //   dayId : this.state.dayId,
+    //   deudas : userList
+    // })
+    // .then(function() {
+    //   alert('ok');
+    // })
+    // .catch(function(error) {
+    //     console.error("Error writing document: ", error);
+    // });
 
   }
 
@@ -342,6 +374,13 @@ class Dashboard extends React.Component {
 
     //this.setState( {listaDelDia: listaDelDia} )
 
+  }
+
+  setListChecks = (checks) => {
+    db.collection("listas").doc(this.state.dayId).update({
+      updatedAt : new Date(),
+      listChecks : checks
+    })
   }
 
   handleDrawerOpen = () => {
@@ -415,7 +454,7 @@ class Dashboard extends React.Component {
 
           <ListaCompra listaDelDia={this.state.listaDelDia} deleteItem={this.deleteItem} handleChangeBloqueoLista={this.handleChangeBloqueoLista} generarCobro={this.generarCobro} loggedUserId={this.state.user ? this.state.user.uid : null} />
 
-          <ListaTotal listaDelDia={this.state.listaDelDia} setItemValor={this.setItemValor} loggedUserId={this.state.user ? this.state.user.uid : null} />
+          <ListaTotal listaDelDia={this.state.listaDelDia} setItemValor={this.setItemValor} setListChecks={this.setListChecks} loggedUserId={this.state.user ? this.state.user.uid : null} />
 
           <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} disabled={ !!this.state.listaDelDia.bloqueada } />
           
