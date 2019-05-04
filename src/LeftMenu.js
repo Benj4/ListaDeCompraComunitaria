@@ -10,25 +10,22 @@ import BarChartIcon from '@material-ui/icons/BarChart';
 import LayersIcon from '@material-ui/icons/Layers';
 // import AssignmentIcon from '@material-ui/icons/Assignment';
 
-const dias = ['', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 
-const hoy = dias[(new Date()).getDay()];
-
-export const mainListItems = (
+export const mainListItems = (changeHash) => (
   <div>
-    <ListItem button>
+    <ListItem button onClick={changeHash('#home')}>
       <ListItemIcon>
         <DashboardIcon />
       </ListItemIcon>
       <ListItemText primary="Lista diaria" />
     </ListItem>
-    <ListItem button>
+    <ListItem button onClick={changeHash('#cobros')}>
       <ListItemIcon>
         <ShoppingCartIcon />
       </ListItemIcon>
       <ListItemText primary="Cobros" />
     </ListItem>
-    <ListItem button>
+    <ListItem button onClick={changeHash('#deudas')} >
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>

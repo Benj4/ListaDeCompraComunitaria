@@ -27,6 +27,10 @@ import ListaTotal from './List/ListaTotal';
 
 import AddDialog from './AddDialog/AddDialog';
 
+import Deudas from './Deudas';
+import Cobros from './Cobros';
+
+
 const db = firebase.firestore();
 
 const drawerWidth = 240;
@@ -114,14 +118,42 @@ const styles = theme => ({
   }
 });
 
+function getHash(){
+  var valid = ['#home','#cobros','#deudas'];
+
+  if (valid.indexOf(window.location.hash) === -1) {
+    window.location.hash = '#home';
+  }
+
+  return window.location.hash;
+
+}
+
 class Dashboard extends React.Component {
   
-  state = {
-    open: true,
-    user: false,
-    listaDelDia : { lista: {} },
-    itemList : []
-  };
+  constructor(props) {
+    super(props);
+    // Don't call this.setState() here!
+    this.state = {
+      open: true,
+      user: false,
+      listaDelDia : { lista: {} },
+      itemList : [],
+      hash : getHash()
+    };
+   
+  }
+
+  // state = {
+  //   open: true,
+  //   user: false,
+  //   listaDelDia : { lista: {} },
+  //   itemList : [],
+  //   hash : '#home'
+  // };
+
+  unsubscribeList = {}
+  unsubscribeItems = {}
 
   componentWillMount(){
 
@@ -129,7 +161,7 @@ class Dashboard extends React.Component {
     firebase.auth().getRedirectResult().then( (result) => {
       var user = result.user;
       if( user ){
-        console.log('Redirect: user', user.providerData[0]);
+        // console.log('Redirect: user', user.providerData[0]);
         this.setState( {user: user.providerData[0]} );
       }else{
         console.log('Redirect: not logged');
@@ -143,7 +175,7 @@ class Dashboard extends React.Component {
     //cuando la pagina se carga y toma el login de las cookies
     firebase.auth().onAuthStateChanged( (user) => {
       if (user) {
-        console.log('User is signed in.', user.providerData[0]);
+        // console.log('User is signed in.', user.providerData[0]);
         this.setState( {user: user.providerData[0]} );
       } else {
         this.setState( {user: null} );
@@ -165,23 +197,35 @@ class Dashboard extends React.Component {
 
   }
 
+  componentWillUnmount(){
+    this.unsubscribeList();
+    this.unsubscribeItems();
+  }
+
+  changeHash = hash => event => {
+
+    window.location.hash = hash;
+    this.setState( { hash : getHash() } );
+
+  }
+
   listenItems = () => {
     var that = this;
     var items = [];
-    db.collection("items").get().then(function(querySnapshot) {
+    this.unsubscribeItems = db.collection("items").get().then(function(querySnapshot) {
       querySnapshot.forEach(function(doc) {
           items.push( { label: doc.id } );
           // doc.data() is never undefined for query doc snapshots
           //console.log(doc.id, " => ", doc.data());
       });
       that.setState({ itemList : items });
-  });
+    });
   }
 
   listenList = () => {
     
 
-    db.collection("listas").doc(this.state.dayId)
+    this.unsubscribeList = db.collection("listas").doc(this.state.dayId)
     .onSnapshot( (doc) => {
         if( !doc.exists ){
           
@@ -299,19 +343,19 @@ class Dashboard extends React.Component {
         //   cancelado : 0
         // }
 
-        collecDeudas.where("dayId", "==", this.state.dayId).where("deudor", "==", listaDelDia.lista[key].userData)
+        collecDeudas.where("dayId", "==", this.state.dayId).where("deudor.uid", "==", listaDelDia.lista[key].userData.uid)
         .get()
         .then( (querySnapshot) => {
             querySnapshot.forEach(function(doc) {
                
                 collecDeudas.doc(doc.id).update({
                   updatedAt : new Date(),
-                  dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+                  deuda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
                 })
 
             });
 
-            if(querySnapshot.size == 0){
+            if(querySnapshot.size == 0 && this.state.user.uid !== listaDelDia.lista[key].userData.uid){
 
               const { uid, displayName, photoURL } = this.state.user;
         
@@ -320,11 +364,14 @@ class Dashboard extends React.Component {
                 dayId : this.state.dayId,
                 deudor : listaDelDia.lista[key].userData,
                 cobrador : { uid, displayName, photoURL },
-                dauda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
-                cancelado : 0
+                deuda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+                pagado : false
               });
 
             }
+
+            this.setState( { hash : '#cobros' } );
+
         })
         
 
@@ -393,6 +440,7 @@ class Dashboard extends React.Component {
 
   render() {
     const { classes } = this.props;
+    const loggedUserId = this.state.user ? this.state.user.uid : null;
 
     return (
       <div className={classes.root}>
@@ -420,8 +468,8 @@ class Dashboard extends React.Component {
               noWrap
               className={classes.title}
             >
-              Lista Desayuno
-              {/* Desayuneitor3Mil!!!!11 */}
+              {/* Lista Desayuno */}
+              Desayuneitor3Mil!!!!11
             </Typography>
 
             <Avatar user={this.state.user}  />
@@ -445,20 +493,46 @@ class Dashboard extends React.Component {
             </IconButton>
           </div>
           <Divider />
-          <List>{mainListItems}</List>
+          <List>{ mainListItems(this.changeHash) }</List>
 
         </Drawer>
-        <main className={classes.content}>
+        {(()=>{
+          // console.log('this.state.hash', this.state.hash);
+          switch(this.state.hash) {
+            case '#home':
+              return (
+                <main className={classes.content}>
 
-          <CompradorHeader listaDelDia={this.state.listaDelDia} handleChangeComprador={ this.handleChangeComprador } loggedUserId={this.state.user ? this.state.user.uid : null} />
+                  <CompradorHeader listaDelDia={this.state.listaDelDia} handleChangeComprador={ this.handleChangeComprador } loggedUserId={loggedUserId} />
 
-          <ListaCompra listaDelDia={this.state.listaDelDia} deleteItem={this.deleteItem} handleChangeBloqueoLista={this.handleChangeBloqueoLista} generarCobro={this.generarCobro} loggedUserId={this.state.user ? this.state.user.uid : null} />
+                  <ListaCompra listaDelDia={this.state.listaDelDia} deleteItem={this.deleteItem} handleChangeBloqueoLista={this.handleChangeBloqueoLista} generarCobro={this.generarCobro} loggedUserId={loggedUserId} />
 
-          <ListaTotal listaDelDia={this.state.listaDelDia} setItemValor={this.setItemValor} setListChecks={this.setListChecks} loggedUserId={this.state.user ? this.state.user.uid : null} />
+                  <ListaTotal listaDelDia={this.state.listaDelDia} setItemValor={this.setItemValor} setListChecks={this.setListChecks} loggedUserId={loggedUserId} />
 
-          <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} disabled={ !!this.state.listaDelDia.bloqueada } />
-          
-        </main>
+                  <AddDialog addItem={ this.reciveItem } itemList={this.state.itemList} disabled={ !!this.state.listaDelDia.bloqueada } />
+                  
+                </main>
+              )
+            case '#cobros':
+
+              return (
+                <main className={classes.content}>
+                  <Cobros key={loggedUserId} loggedUserId={loggedUserId} />
+                </main>
+              )
+
+            case '#deudas':
+              return (
+                <main className={classes.content}>
+                  <Deudas key={loggedUserId} loggedUserId={loggedUserId} />
+                </main>
+              )
+            default:
+              return <div>def</div>
+          }
+
+        })()}
+        
       </div>
     );
   }

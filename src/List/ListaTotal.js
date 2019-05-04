@@ -39,7 +39,8 @@ const styles = theme => ({
 class ListaTotal extends React.Component {
   state = {
     checked: [],
-    valoresCalculados: {}
+    valoresCalculados: {},
+    itemsvalues : {}
   };
 
   //cuarda la operacion y no la ejecuta nuevamente si los parametros no cambian
@@ -92,12 +93,13 @@ class ListaTotal extends React.Component {
 
   handleChange = item => event => {
     
-    const { valoresCalculados } = this.state;
+    const { valoresCalculados, itemsvalues } = this.state;
+    itemsvalues[item.item] = parseInt(event.target.value);
     try {
       valoresCalculados[item.item] = Math.round( parseInt(event.target.value) / item.cantidad );
     } catch (error) {}
 
-    this.setState( { valoresCalculados : valoresCalculados } );
+    this.setState( { valoresCalculados, itemsvalues } );
 
   }
 
@@ -147,10 +149,10 @@ class ListaTotal extends React.Component {
                       <TableCell align="right">
                         <TextField
                           label="Valor"
-                          // value={}
+                          value={ this.state.itemsvalues[item.item] }
                           onChange={this.handleChange(item)}
                           onBlur={this.handleBlur(item)}
-                          type="number"
+                          type="text"
                           defaultValue={ (item.total || '') }
                           //value={ (item.total || '') }
                           // className={classes.textField}

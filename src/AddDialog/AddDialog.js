@@ -20,8 +20,8 @@ class ResponsiveDialog extends React.Component {
     cantidad : 1 
   };
 
-  handleChange = name => event => {
-    this.setState({ [name]: event.target.value });
+  handleChange = name => event => {   
+    this.setState({ [name]: parseInt(event.target.value) || '' });
   };
 
   handleValue = ( value ) => {
@@ -75,7 +75,7 @@ class ResponsiveDialog extends React.Component {
               label="Number"
               value={this.state.cantidad}
               onChange={this.handleChange('cantidad')}
-              type="number"
+              type="text"
               // className={classes.textField}
               InputLabelProps={{
                 shrink: true,

@@ -35,12 +35,13 @@ const styles = theme => ({
     fontSize: 'small',
     color: 'darkslategray',
     margin: 10
-  }
+  },
+  textcust: {width : 'initial'}
 });
 
 class ListaCompra extends React.Component {
   state = {
-    checked: [1],
+    checked: [],
   };
 
   handleDelete = data => () => {
@@ -111,28 +112,23 @@ class ListaCompra extends React.Component {
       <Paper className={classes.paper}>
         <List className={classes.root}>
           { Object.keys(usersList).filter(u => usersList[u].items.length ).map(uid => (
-            <ListItem key={uid} button>
-              <ListItemAvatar>
-                <Avatar
-                  alt={usersList[uid].userData.displayName}
+            <ListItem key={uid} >
+
+              <Avatar
                   src={usersList[uid].userData.photoURL}
-                />
-              </ListItemAvatar>
-              <ListItem >
-
-                <ListaPersona items={usersList[uid].items} deleteItem={this.props.deleteItem} showDelete={ (this.props.loggedUserId == uid) && !listaDelDia.bloqueada }  />
-                
-              </ListItem>
-              <ListItem >
-
-                <ListItemText secondary={ usersList[uid].textTotal ? usersList[uid].textTotal : '' } />
-              </ListItem>
+              />
+              <ListItemText
+                primary={usersList[uid].userData.displayName} 
+                secondary={<ListaPersona items={usersList[uid].items} deleteItem={this.props.deleteItem} showDelete={ (this.props.loggedUserId == uid) && !listaDelDia.bloqueada }  />}
+              />
               <ListItemSecondaryAction>
+                <ListItemText secondary={ usersList[uid].textTotal ? usersList[uid].textTotal : '' } />
                 {/* <Checkbox
                   onChange={this.handleToggle(uid)}
                   checked={this.state.checked.indexOf(uid) !== -1}
                 /> */}
               </ListItemSecondaryAction>
+
             </ListItem>
           ))}
         </List>
