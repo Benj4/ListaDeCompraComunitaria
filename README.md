@@ -17,7 +17,8 @@ $ npm start
 ```
 
 Para usar otra cuanta de firebase
-1.- crear un proyecto en firebase
-2.- crear una base de datos firestore
-3.- reemplazar la configuracion en el archivo firebase.js de este proyecto.
+- crear un proyecto en firebase
+- crear una base de datos firestore
+- reemplazar la configuracion en el archivo firebase.js de este proyecto.
 
+[Sitio funcional aqui](desayuneitor-3mil-11uno.firebaseapp.com/)
