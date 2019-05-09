@@ -72,7 +72,7 @@ class ResponsiveDialog extends React.Component {
             </DialogContentText> */}
             <TextField
               id="cantidad"
-              label="Number"
+              label="Cantidad"
               value={this.state.cantidad}
               onChange={this.handleChange('cantidad')}
               type="text"

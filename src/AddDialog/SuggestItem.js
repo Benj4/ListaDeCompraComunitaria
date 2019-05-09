@@ -124,6 +124,8 @@ class SuggestItem extends React.Component {
   };
 
   handleChange = name => (event, { newValue }) => {
+    if(newValue.length > 50) return;
+    
     this.setState({
       [name]: newValue,
     });

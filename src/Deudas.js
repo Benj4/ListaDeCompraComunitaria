@@ -10,6 +10,7 @@ import Paper from '@material-ui/core/Paper';
 import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import firebase from './firebase';
 const db = firebase.firestore();
 
@@ -35,7 +36,8 @@ const styles = theme => ({
 class Deudas extends React.Component {
   state = {
     deudas : [],
-    checked : {}
+    checked : {},
+    loading: true
   };
 
 
@@ -54,11 +56,11 @@ class Deudas extends React.Component {
               //console.log(doc.id, " => ", doc.data());
               deudas.push( { id : doc.id, data: doc.data() } );
           });
-          this.setState({deudas: deudas});
+          this.setState({deudas: deudas, loading : false});
       })
       .catch((error) => {
           console.log("Error getting documents: ", error);
-          this.setState({deudas: deudas});
+          this.setState({deudas: deudas, loading : false});
       });  
     }
 
@@ -77,6 +79,7 @@ class Deudas extends React.Component {
       <div>
         <h3>Deudas</h3>
         <Paper className={classes.paper}>
+        { this.state.loading ? <CircularProgress color="primary" /> : null }
         <List className={classes.root}>
           { this.state.deudas.map(cobro => (
             

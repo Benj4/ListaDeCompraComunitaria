@@ -135,7 +135,7 @@ class Dashboard extends React.Component {
     super(props);
     // Don't call this.setState() here!
     this.state = {
-      open: true,
+      open: false,
       user: false,
       listaDelDia : { lista: {} },
       itemList : [],
@@ -154,6 +154,8 @@ class Dashboard extends React.Component {
 
   unsubscribeList = {}
   unsubscribeItems = {}
+
+  saving = false
 
   componentWillMount(){
 
@@ -259,9 +261,15 @@ class Dashboard extends React.Component {
       const listaDelDia = this.state.listaDelDia;
       var listaUsuario = listaDelDia.lista[this.state.user.uid];
 
-      //TODO: incrementar cantidad cuando el item ya exista
+      
       if(listaUsuario){
-        listaUsuario.items.push( item );
+        let savedItem = listaUsuario.items.find( i => i.item === item.item );
+        //si el item ya existe, solo se le usma la cantidad
+        if( savedItem ){
+          savedItem.cantidad += item.cantidad;
+        }else{
+          listaUsuario.items.push( item );
+        }
       }else{
         
         const { uid, displayName, photoURL } = this.state.user;
@@ -328,8 +336,13 @@ class Dashboard extends React.Component {
 
   generarCobro = () => {
 
+    if( this.saving ){
+      console.log('Nop!');
+      return;
+    }
+    this.saving = true;
+
     const listaDelDia = this.state.listaDelDia;
-    var userList = {};
 
     const collecDeudas = db.collection("deudas");
 
@@ -348,9 +361,13 @@ class Dashboard extends React.Component {
         .then( (querySnapshot) => {
             querySnapshot.forEach(function(doc) {
                
+                let nuevaDeuda = listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 );
+
+                if( doc.data().deuda === nuevaDeuda ) return; 
+
                 collecDeudas.doc(doc.id).update({
                   updatedAt : new Date(),
-                  deuda : listaDelDia.lista[key].items.reduce( (prev, curr) => prev + curr.valor, 0 ),
+                  deuda : nuevaDeuda,
                 })
 
             });
@@ -369,7 +386,7 @@ class Dashboard extends React.Component {
               });
 
             }
-
+            this.saving = false;
             this.setState( { hash : '#cobros' } );
 
         })
@@ -395,7 +412,7 @@ class Dashboard extends React.Component {
   }
 
   setItemValor = (item) => {
-
+    
     const listaDelDia = this.state.listaDelDia;
 
     for (const key in listaDelDia.lista) {
